@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const mercadopago = require('mercadopago');
-const db = require('./database-mysql');
+const { MercadoPagoConfig, Payment } = require('mercadopago');
+const db = require('./database');
 const path = require('path');
 
 const app = express();
@@ -22,28 +22,35 @@ app.use(express.static('public'));
 
 // Health check endpoint para Railway
 app.get('/health', (req, res) => {
+  const dbType = (process.env.MYSQLHOST || process.env.MYSQL_URL) && process.env.NODE_ENV === 'production' ? 'mysql' : 'sqlite';
   res.status(200).json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    database: 'mysql'
+    database: dbType
   });
 });
 
-// Configurar Mercado Pago - Versão Compatível
+// Configurar Mercado Pago - Nova API v2.8.0
+let client = null;
+let payment = null;
+
 if (!process.env.MP_ACCESS_TOKEN) {
   console.warn('⚠️  MP_ACCESS_TOKEN não configurado. Configure as variáveis de ambiente.');
 } else {
-  mercadopago.configure({
-    access_token: process.env.MP_ACCESS_TOKEN
+  client = new MercadoPagoConfig({ 
+    accessToken: process.env.MP_ACCESS_TOKEN,
+    options: { timeout: 5000 }
   });
+  payment = new Payment(client);
+  console.log('✅ MercadoPago configurado com sucesso!');
 }
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Criar pagamento PIX - Versão Robusta com Fallback
+// Criar pagamento PIX - Nova API v2.8.0
 app.post('/create-pix-payment', async (req, res) => {
   try {
     const { amount, donor_name, donor_email } = req.body;
@@ -59,6 +66,10 @@ app.post('/create-pix-payment', async (req, res) => {
 
     // Tentar criar pagamento real (funciona tanto em teste quanto produção)
     try {
+      if (!payment) {
+        throw new Error('MercadoPago não configurado');
+      }
+
       const paymentData = {
         transaction_amount: parseFloat(amount),
         description: `Doação de ${donor_name || 'Doador Anônimo'}`,
@@ -73,8 +84,8 @@ app.post('/create-pix-payment', async (req, res) => {
       console.log('💰 Tentando criar pagamento PIX no Mercado Pago:', paymentData);
       console.log(isTestMode ? '🧪 Modo: TESTE' : '🚀 Modo: PRODUÇÃO');
       
-      paymentResponse = await mercadopago.payment.create(paymentData);
-      console.log('✅ Pagamento criado com sucesso:', paymentResponse.body.id);
+      paymentResponse = await payment.create({ body: paymentData });
+      console.log('✅ Pagamento criado com sucesso:', paymentResponse.id);
 
     } catch (mpError) {
       console.log('⚠️ Mercado Pago falhou:', mpError.message);
@@ -88,14 +99,12 @@ app.post('/create-pix-payment', async (req, res) => {
       const qrCodeBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
       
       paymentResponse = {
-        body: {
-          id: simulatedId,
-          status: 'pending',
-          point_of_interaction: {
-            transaction_data: {
-              qr_code: qrCodeData,
-              qr_code_base64: qrCodeBase64
-            }
+        id: simulatedId,
+        status: 'pending',
+        point_of_interaction: {
+          transaction_data: {
+            qr_code: qrCodeData,
+            qr_code_base64: qrCodeBase64
           }
         }
       };
@@ -104,37 +113,37 @@ app.post('/create-pix-payment', async (req, res) => {
       console.log('🎭 Pagamento de demonstração criado:', simulatedId);
     }
     
-    if (!paymentResponse || !paymentResponse.body || !paymentResponse.body.id) {
+    if (!paymentResponse || !paymentResponse.id) {
       throw new Error('Falha ao criar pagamento');
     }
 
     console.log('✅ Pagamento criado:', {
-      id: paymentResponse.body.id,
-      status: paymentResponse.body.status,
-      qr_code: paymentResponse.body.point_of_interaction?.transaction_data?.qr_code ? '✅' : '❌',
+      id: paymentResponse.id,
+      status: paymentResponse.status,
+      qr_code: paymentResponse.point_of_interaction?.transaction_data?.qr_code ? '✅' : '❌',
       fallback: usedFallback
     });
 
     // Salvar no banco
     try {
       await db.insertDonation({
-        payment_id: paymentResponse.body.id.toString(),
+        payment_id: paymentResponse.id.toString(),
         amount: parseFloat(amount),
         donor_name: donor_name || 'Doador Anônimo',
         donor_email: donor_email || '',
         status: 'pending',
-        qr_code: paymentResponse.body.point_of_interaction?.transaction_data?.qr_code || '',
-        qr_code_base64: paymentResponse.body.point_of_interaction?.transaction_data?.qr_code_base64 || '',
-        pix_code: paymentResponse.body.point_of_interaction?.transaction_data?.qr_code || ''
+        qr_code: paymentResponse.point_of_interaction?.transaction_data?.qr_code || '',
+        qr_code_base64: paymentResponse.point_of_interaction?.transaction_data?.qr_code_base64 || '',
+        pix_code: paymentResponse.point_of_interaction?.transaction_data?.qr_code || ''
       });
       console.log('✅ Doação salva no banco de dados');
     } catch (dbError) {
       console.error('❌ Erro ao salvar no banco:', dbError.message);
     }
 
-    const paymentId = paymentResponse.body.id.toString();
-    const qrCode = paymentResponse.body.point_of_interaction?.transaction_data?.qr_code || '';
-    const qrCodeBase64 = paymentResponse.body.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+    const paymentId = paymentResponse.id.toString();
+    const qrCode = paymentResponse.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = paymentResponse.point_of_interaction?.transaction_data?.qr_code_base64 || '';
 
     res.json({
       success: true,
@@ -142,7 +151,7 @@ app.post('/create-pix-payment', async (req, res) => {
       qr_code: qrCode,
       qr_code_base64: qrCodeBase64,
       amount: amount,
-      status: paymentResponse.body.status,
+      status: paymentResponse.status,
       is_test: isTestMode,
       is_demo: usedFallback,
       message: usedFallback 
@@ -198,8 +207,12 @@ app.get('/payment-status/:paymentId', async (req, res) => {
 
     // Consultar o Mercado Pago para IDs reais
     try {
-      const paymentInfo = await mercadopago.payment.findById(paymentId);
-      const status = paymentInfo.body.status;
+      if (!payment) {
+        throw new Error('MercadoPago não configurado');
+      }
+      
+      const paymentInfo = await payment.get({ id: paymentId });
+      const status = paymentInfo.status;
       
       console.log(`💳 Status do Mercado Pago para ${paymentId}: ${status}`);
       
@@ -288,8 +301,12 @@ app.post('/webhook', async (req, res) => {
       
       // Consultar detalhes do pagamento no Mercado Pago
       try {
-        const paymentInfo = await mercadopago.payment.findById(paymentId);
-        const status = paymentInfo.body.status;
+        if (!payment) {
+          throw new Error('MercadoPago não configurado');
+        }
+        
+        const paymentInfo = await payment.get({ id: paymentId });
+        const status = paymentInfo.status;
         
         console.log(`📊 Status do webhook: ${status}`);
         
@@ -388,11 +405,12 @@ app.get('/slot-donations', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
+  const dbType = (process.env.MYSQLHOST || process.env.MYSQL_URL) && process.env.NODE_ENV === 'production' ? 'MySQL' : 'SQLite';
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📱 Acesse: ${process.env.NODE_ENV === 'production' ? 'https://your-app.railway.app' : `http://localhost:${PORT}`}`);
   console.log(`💰 Mercado Pago: ${process.env.MP_ACCESS_TOKEN ? '✅ Configurado' : '❌ Não configurado'}`);
-  console.log(`🗄️ Banco de dados: MySQL`);
+  console.log(`🗄️ Banco de dados: ${dbType}`);
   console.log(`🔥 Sistema pronto para receber doações PIX!`);
   
   // Log adicional para Railway

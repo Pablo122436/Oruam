@@ -7,7 +7,9 @@ console.log('🔍 Verificando configuração para Railway...\n');
 const requiredFiles = [
   'package.json',
   'server.js',
-  'database-mysql.js',
+  'database.js',
+  'database-mysql-only.js',
+  'database-sqlite.js',
   'railway.json',
   'Procfile',
   '.env.railway',
@@ -65,10 +67,10 @@ if (gitignore.includes('.env')) {
 console.log('\n🗄️ Verificando configuração do banco...');
 const serverJs = fs.readFileSync('server.js', 'utf8');
 
-if (serverJs.includes('database-mysql')) {
-  console.log('✅ Server.js configurado para MySQL');
+if (serverJs.includes('require(\'./database\')')) {
+  console.log('✅ Server.js configurado para sistema híbrido SQLite/MySQL');
 } else {
-  console.log('❌ Server.js não está configurado para MySQL');
+  console.log('❌ Server.js não está configurado corretamente');
   allFilesExist = false;
 }
 
@@ -83,7 +85,7 @@ if (allFilesExist) {
   console.log('3. Adicione serviço MySQL no Railway');
   console.log('4. Configure as variáveis MP_ACCESS_TOKEN e MP_PUBLIC_KEY');
   console.log('5. Deploy automático será iniciado!');
-  console.log('\n🗄️ O MySQL será configurado automaticamente pelo Railway');
+  console.log('\n🗄️ O sistema usará SQLite localmente e MySQL no Railway automaticamente');
 } else {
   console.log('❌ Configuração incompleta');
   console.log('Corrija os problemas acima antes do deploy');
