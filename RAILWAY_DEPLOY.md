@@ -13,11 +13,16 @@
 3. Selecione "Deploy from GitHub repo"
 4. Escolha o repositório `Oruam`
 
-### 2. Configurar Variáveis de Ambiente
-No painel do Railway, vá para **Settings > Variables** e adicione:
+### 2. Adicionar Banco MySQL
+1. No dashboard do seu projeto, clique em "+ New Service"
+2. Selecione "Database" > "Add MySQL"
+3. O Railway criará automaticamente todas as variáveis do MySQL
+
+### 3. Configurar Variáveis de Ambiente
+No painel do Railway, vá para **Settings > Variables** e adicione APENAS:
 
 ```bash
-# Obrigatórias
+# Obrigatórias (adicione manualmente)
 MP_ACCESS_TOKEN=seu_access_token_do_mercadopago
 MP_PUBLIC_KEY=sua_public_key_do_mercadopago
 NODE_ENV=production
@@ -25,12 +30,21 @@ NODE_ENV=production
 # Opcionais (Railway configura automaticamente)
 PORT=3000
 CORS_ORIGIN=https://seu-app.up.railway.app
+
+# MySQL (CRIADAS AUTOMATICAMENTE pelo Railway)
+MYSQL_DATABASE=oruam
+MYSQL_URL=mysql://...
+MYSQLHOST=mysql.railway.internal
+MYSQLUSER=root
+MYSQLPASSWORD=...
+MYSQLPORT=3306
 ```
 
-### 3. Deploy Automático
+### 4. Deploy Automático
 - O Railway detectará automaticamente que é um projeto Node.js
 - Usará o comando `npm start` definido no package.json
-- O banco SQLite será criado automaticamente
+- O banco MySQL será criado e configurado automaticamente
+- As tabelas serão criadas automaticamente na primeira execução
 
 ## 🔒 Segurança Configurada
 

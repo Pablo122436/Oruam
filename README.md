@@ -6,10 +6,11 @@ Sistema completo de pagamentos PIX via Mercado Pago com ranking de doações.
 
 **[Clique aqui para o guia completo de deploy](RAILWAY_DEPLOY.md)**
 
-### Deploy em 3 passos:
+### Deploy em 4 passos:
 1. Conecte este repositório ao Railway
-2. Configure as variáveis de ambiente (MP_ACCESS_TOKEN, MP_PUBLIC_KEY)
-3. Pronto! Seu app estará no ar automaticamente
+2. Adicione serviço MySQL no Railway  
+3. Configure as variáveis de ambiente (MP_ACCESS_TOKEN, MP_PUBLIC_KEY)
+4. Pronto! Seu app estará no ar automaticamente
 
 ## Funcionalidades
 
@@ -17,9 +18,10 @@ Sistema completo de pagamentos PIX via Mercado Pago com ranking de doações.
 - 🏆 Ranking das maiores doações
 - 📋 Lista de todas as doações
 - 🔄 Atualizações em tempo real
-- 💾 Armazenamento em SQLite
+- �️ Armazenamento em MySQL (Railway)
 - 🔒 Configurado para produção segura
 - 🌐 Health check integrado
+- 📊 Estatísticas completas
 
 ## Desenvolvimento Local
 
@@ -33,6 +35,7 @@ npm install
 MP_ACCESS_TOKEN=seu_access_token_aqui
 MP_PUBLIC_KEY=sua_public_key_aqui
 PORT=3000
+# Para desenvolvimento local com SQLite
 ```
 
 3. Execute o servidor:
