@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Souta Oruam - Vaquinha Online</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="https://s2-extra.glbimg.com/4F04mLXGTaj91cVNEZSXe8Wq23g=/1090x0:2245x1587/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_1f551ea7087a47f39ead75f64041559a/internal_photos/bs/2025/y/v/AHDfEbQAqiBdWCu3p6Rg/texto-do-seu-paragrafo-2025-03-01t204136.399.png" alt="Logo Oruam" class="header-image">
+            <div class="header-text">
+                <h1>Souta o Oruam</h1>
+                <p class="subtitle">Cantor não é bandido</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="campaign-info">
+            <h2>Juntos pela liberdade de Oruam</h2>
+            <p>Oruam, um dos maiores nomes do trap nacional, precisa da nossa ajuda. Contribua com qualquer valor para ajudar na causa pela sua liberdade.</p>
+            <p>#soutaooruam</p>
+            
+            <div class="campaign-image-container">
+                <img src="img/cheideodio.png" alt="Imagem da campanha" class="campaign-image">
+            </div>
+        </section>
+
+        <section class="donation-section">
+            <h3 class="donation-title">Faça sua doação via PIX</h3>
+            
+            <!-- Formulário de Doação -->
+            <form id="donation-form">
+                <div class="form-group">
+                    <label for="donor-name">Seu Nome (opcional):</label>
+                    <input type="text" id="donor-name" placeholder="Digite seu nome">
+                </div>
+                
+                <div class="form-group">
+                    <label for="donor-email">Seu E-mail (opcional):</label>
+                    <input type="email" id="donor-email" placeholder="seu@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Valor da Doação (R$):</label>
+                    <input type="number" id="amount" min="1" step="0.01" placeholder="1.00" required>
+                </div>
+                
+                <button type="submit" class="btn" id="generate-pix-btn">
+                    Gerar PIX
+                </button>
+            </form>
+
+            <!-- QR Code PIX (inicialmente oculto) -->
+            <div id="qr-section" class="hidden">
+                <div class="qr-code-container">
+                    <img id="qr-code-img" alt="QR Code PIX para doação">
+                </div>
+                
+                <div class="pix-key" id="pix-code-text">
+                    <!-- Código PIX aparecerá aqui -->
+                </div>
+                
+                <button class="copy-btn" id="copy-pix-btn">
+                    <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copiar Código PIX
+                </button>
+
+                <!-- Info do Pagamento -->
+                <div id="payment-info" class="payment-info hidden">
+                    <!-- Informações do pagamento aparecerão aqui -->
+                </div>
+
+                <!-- Simulação de Pagamento (apenas para DEMO) -->
+                <div id="simulate-section" class="hidden">
+                    <button class="btn" id="simulate-payment-btn">
+                        🎭 Simular Pagamento (DEMO)
+                    </button>
+                </div>
+            </div>
+            
+            <div class="donors-count">
+                <p>Já temos <span id="total-donors">0</span> apoiadores nesta causa!</p>
+            </div>
+        </section>
+
+        <section class="ranking-section">
+            <h3 class="ranking-title">
+                <svg class="ranking-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.5 21L3 18.5V11h3.5v10zm5.25 0L8.5 18.5V8h3.25v13zm5.25 0L13.75 18.5V3H17v18zM21 21v-9h-3v9h3z"/>
+                </svg>
+                Top Apoiadores
+            </h3>
+            
+            <ul class="ranking-list" id="ranking-list">
+                <!-- Ranking será carregado dinamicamente -->
+            </ul>
+            
+            <div class="live-donors-section">
+                <h4 class="live-donors-title">
+                    <svg class="live-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Apoiadores em Tempo Real
+                </h4>
+                
+                <div class="slot-container">
+                    <div class="slot-reel" id="slot-reel">
+                        <!-- Items serão gerados pelo JavaScript -->
+                    </div>
+                </div>
+                
+                <button class="view-all-btn" id="view-all-supporters-btn">
+                    👥 Ver todos os apoiadores
+                </button>
+            </div>
+            
+            <div class="ranking-footer">
+                <p>🏆 Top 3 apoiadores que mais contribuíram</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p><a href="#" id="disclaimer-link" class="disclaimer-link">Leia</a> &copy; cardique todos os direitos reservados</p>
+    </footer>
+
+    <!-- Modal de Todos os Apoiadores -->
+    <div class="modal-overlay" id="supporters-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Todos os Apoiadores
+                </h3>
+                <button class="modal-close" id="close-modal">×</button>
+            </div>
+            <div class="modal-search">
+                <div class="search-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <input type="text" id="supporter-search" placeholder="Pesquisar apoiador..." autocomplete="off">
+                    <button id="clear-search" class="clear-search" style="display: none;">×</button>
+                </div>
+            </div>
+            <div class="modal-body" id="supporters-list">
+                <!-- Lista de apoiadores será carregada aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Pagamento -->
+    <div class="modal-overlay" id="payment-success-modal">
+        <div class="modal-content payment-success-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    Pagamento Confirmado!
+                </h3>
+                <button class="modal-close" id="close-payment-modal">×</button>
+            </div>
+            <div class="modal-body payment-success-body">
+                <div class="oruam-photo-container">
+                    <img src="https://s2-extra.glbimg.com/4F04mLXGTaj91cVNEZSXe8Wq23g=/1090x0:2245x1587/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_1f551ea7087a47f39ead75f64041559a/internal_photos/bs/2025/y/v/AHDfEbQAqiBdWCu3p6Rg/texto-do-seu-paragrafo-2025-03-01t204136.399.png" 
+                         alt="Oruam agradece sua doação" 
+                         class="oruam-success-photo">
+                </div>
+                <div class="success-message">
+                    <h4>Cardiquê num mandou mais cria?</h4>
+                    <p>#soutaooruam</p>
+                    <p class="donation-details">
+                        <strong>Valor doado:</strong> <span id="confirmed-amount" class="amount-highlight">R$ 0,00</span>
+                    </p>
+                    <p class="gratitude-message">
+                        22 meu vulgo!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Código PIX copiado com sucesso!
+    </div>
+
+    <!-- Modal de Disclaimer -->
+    <div class="modal-overlay" id="disclaimer-modal">
+        <div class="modal-content disclaimer-modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    ⚠️ Aviso Importante
+                </h3>
+                <button class="modal-close" id="close-disclaimer-modal">×</button>
+            </div>
+            <div class="modal-body disclaimer-modal-body">
+                <div class="disclaimer-content">
+                    <p><strong>Este site é para fins de brincadeira, porém funciona de verdade!</strong></p>
+                    
+                    <p>Estou testando projetos com gateways de pagamentos, então <strong>este não é um site oficial</strong> e não me comprometo pelos PIX enviados pelas pessoas.</p>
+                    
+                    <p>Mas com certeza o <strong>Oruam iria gostar</strong> que as pessoas enviassem PIX para ajudar a libertar ele! 😄</p>
+                    
+                    <div class="disclaimer-hashtag">
+                        <p><strong>#soutaooruam</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="oruam-text" id="oruam-text">Cardique</div>
+
+    <div class="oruam-character" id="oruam-character">
+        <img src="https://s2-extra.glbimg.com/4F04mLXGTaj91cVNEZSXe8Wq23g=/1090x0:2245x1587/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_1f551ea7087a47f39ead75f64041559a/internal_photos/bs/2025/y/v/AHDfEbQAqiBdWCu3p6Rg/texto-do-seu-paragrafo-2025-03-01t204136.399.png" alt="Oruam Character">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
