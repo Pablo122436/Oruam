@@ -58,19 +58,6 @@ typings/
 .env.test
 .env.local
 .env.production
-.env.development
-
-# Railway specific
-.railway
-
-# Environment variables examples (keep for reference)
-!.env.example
-!.env.railway
-
-# Sensitive files
-config/secrets.js
-secrets/
-private/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

@@ -1,26 +1,26 @@
-require('dotenv').config();
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-let db = null;
-let isMySQL = false;
+// Criar conexão com o banco de dados
+const dbPath = path.join(__dirname, 'donations.db');
+const db = new sqlite3.Database(dbPath);
 
-// Verificar se está no Railway (variáveis MySQL disponíveis)
-const hasMySQL = process.env.MYSQLHOST || process.env.MYSQL_URL;
-
-console.log('🔍 Verificando ambiente...');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('MYSQLHOST:', process.env.MYSQLHOST ? 'Definido' : 'Não definido');
-console.log('MYSQL_URL:', process.env.MYSQL_URL ? 'Definido' : 'Não definido');
-
-if (hasMySQL && process.env.NODE_ENV === 'production') {
-  // Usar MySQL em produção (Railway)
-  console.log('🗄️ Usando MySQL para produção...');
-  isMySQL = true;
-  db = require('./database-mysql-only');
-} else {
-  // Usar SQLite em desenvolvimento
-  console.log('🗄️ Usando SQLite para desenvolvimento...');
-  isMySQL = false;
-  db = require('./database-sqlite');
-}
+// Criar tabela de doações se não existir
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS donations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      payment_id TEXT UNIQUE,
+      donor_name TEXT,
+      donor_email TEXT,
+      amount REAL NOT NULL,
+      status TEXT DEFAULT 'pending',
+      pix_qr_code TEXT,
+      pix_qr_code_base64 TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      paid_at DATETIME
+    )
+  `);
+});
 
 module.exports = db;
